@@ -31,14 +31,14 @@ jobs:
 
       - name: Generate React Native Android project
         run: |
-          npx react-native@0.76.6 init AndroidAssistant --skip-install --template react-native-template-blank-typescript
+          npx @react-native-community/cli@latest init AndroidAssistant --skip-install --template react-native-template-blank-typescript
           cd AndroidAssistant
           npm install
 
           # Copy our custom files
-          cp -r ../App.tsx ./
-          cp -r ../GatewayClient.ts ./
-          cp -r ../VoiceManager.tsx ./
+          cp ../App.tsx ./
+          cp ../GatewayClient.ts ./
+          cp ../VoiceManager.tsx ./
           cp ../package.json ./
 
           # Overwrite generated files with our custom ones
