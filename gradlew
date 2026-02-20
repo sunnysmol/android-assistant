@@ -1,12 +1,8 @@
 #!/bin/sh
 
-# Determine APP_HOME
-app_path="$0"
-while [ -h "$app_path" ]; do
-    APP_HOME=${app_path%"${app_path##*[!/]}"}
-    app_path=$(ls -ld "$APP_HOME")
-done
-APP_HOME=$(cd "${APP_HOME}/.." && pwd)
+# Determine the base directory
+BASEDIR=$(dirname "$0")
+cd "$BASEDIR" || exit 1
 
 # Find Java
 if [ -n "$JAVA_HOME" ]; then
@@ -16,7 +12,7 @@ else
 fi
 
 # Build classpath
-CLASSPATH="$APP_HOME/gradle/wrapper/gradle-wrapper.jar"
+CLASSPATH="gradle/wrapper/gradle-wrapper.jar"
 
 # Execute Gradle
 exec "$JAVACMD" -classpath "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"
