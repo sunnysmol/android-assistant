@@ -33,11 +33,10 @@ jobs:
 
       - name: Create minimal React Native structure
         run: |
-          mkdir -p AndroidAssistant
-          cd AndroidAssistant
+          # Initialize React Native project with proper project name
+          npx @react-native-community/cli@latest init AndroidAssistant --skip-install
 
-          # Initialize with latest template (skip template parameter)
-          npx @react-native-community/cli@latest init . --skip-install
+          cd AndroidAssistant
 
           # Install dependencies
           npm install
