@@ -2,10 +2,9 @@ name: Build Android APK
 
 on:
   push:
-    branches: [main]
+    branches: [main, ci/*]
   pull_request:
     branches: [main]
-  workflow_dispatch:
 
 jobs:
   build:
@@ -29,28 +28,39 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Generate React Native Android project
+      - name: Install React Native CLI
+        run: npm install -g @react-native-community/cli@latest
+
+      - name: Create minimal React Native structure
         run: |
-          npx @react-native-community/cli@latest init AndroidAssistant --skip-install --template react-native-template-blank-typescript
+          mkdir -p AndroidAssistant
           cd AndroidAssistant
+
+          # Initialize with latest template (skip template parameter)
+          npx @react-native-community/cli@latest init . --skip-install
+
+          # Install dependencies
           npm install
+
+          # Install our voice modules
+          npm install react-native-voice react-native-tts
+
+      - name: Copy our custom files
+        working-directory: ./AndroidAssistant
+        run: |
+          # Backup generated files
+          cp App.tsx App.tsx.backup || true
+          cp package.json package.json.backup || true
 
           # Copy our custom files
           cp ../App.tsx ./
           cp ../GatewayClient.ts ./
           cp ../VoiceManager.tsx ./
-          cp ../package.json ./
 
-          # Overwrite generated files with our custom ones
-          rm -f App.tsx package.json
-          mv ../App.tsx ./
-          mv ../GatewayClient.ts ./
-          mv ../VoiceManager.tsx ./
-          mv ../package.json ./
-
-      - name: Install iOS pods (for consistency, though not used)
-        working-directory: ./AndroidAssistant/ios
-        run: pod install || true
+          # Copy our package.json (preserve existing dependencies)
+          if [ -f ../package.json ]; then
+            cp ../package.json ./
+          fi
 
       - name: Build Android Debug APK
         working-directory: ./AndroidAssistant
