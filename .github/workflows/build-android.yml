@@ -9,13 +9,13 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -29,29 +29,51 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Generate React Native Android project
+        run: |
+          npx react-native@0.76.6 init AndroidAssistant --skip-install --template react-native-template-blank-typescript
+          cd AndroidAssistant
+          npm install
+
+          # Copy our custom files
+          cp -r ../App.tsx ./
+          cp -r ../GatewayClient.ts ./
+          cp -r ../VoiceManager.tsx ./
+          cp ../package.json ./
+
+          # Overwrite generated files with our custom ones
+          rm -f App.tsx package.json
+          mv ../App.tsx ./
+          mv ../GatewayClient.ts ./
+          mv ../VoiceManager.tsx ./
+          mv ../package.json ./
+
+      - name: Install iOS pods (for consistency, though not used)
+        working-directory: ./AndroidAssistant/ios
+        run: pod install || true
 
       - name: Build Android Debug APK
+        working-directory: ./AndroidAssistant
         run: |
           cd android
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
-          path: android/app/build/outputs/apk/debug/*.apk
+          path: AndroidAssistant/android/app/build/outputs/apk/debug/*.apk
           retention-days: 7
 
       - name: Build Release Bundle
+        working-directory: ./AndroidAssistant
         run: |
           cd android
-          ./gradlew bundleRelease
+          ./gradlew bundleRelease --no-daemon
 
       - name: Upload Release Bundle artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: android/app/build/outputs/bundle/release/*.aab
+          path: AndroidAssistant/android/app/build/outputs/bundle/release/*.aab
           retention-days: 7
